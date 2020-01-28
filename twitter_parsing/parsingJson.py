@@ -22,8 +22,8 @@ T = tokenizer.TweetTokenizer(preserve_handles = False, preserve_case = False, pr
 
 all_tweet_tokens = {}
 
-direct = "/home/ubuntu/S3Alias/test_folder/"
-#direct = "/Users/willshin/Development/OldNews_InsightProject/twitter_parsing/test_folder/"
+#direct = "/home/ubuntu/S3Alias/test_folder/"
+direct = "/Users/willshin/Development/OldNews_InsightProject/twitter_parsing/test_folder/"
 for filename in os.listdir(direct):
     full_file_name = direct + filename
     tweets = []
@@ -38,7 +38,7 @@ for filename in os.listdir(direct):
                     timestamp = tweet["created_at"]
                     # parsing with fancy method
                     now = parse(timestamp)
-                    current_tweet_time = str(now.year) + "/" + str(now.month) + "/" + str(now.day)
+                    current_tweet_time = str(now.year) + "/" + str(now.month) + "/" + str(now.day) + "/" + str(now.hour)
                     # oh right just hash tags
                     for tok in mytokens:
                         if "#" in tok:
@@ -58,4 +58,56 @@ for filename in os.listdir(direct):
                                     time_for_tweet["time"][current_tweet_time] = old_count + 1
                                     all_tweet_tokens[tok] = time_for_tweet
         
- 
+
+# turn into Pandas Dataframe
+
+pd_df = pd.DataFrame(columns=["Word", "DateTime", "Freq"])
+
+# this is the big loop
+for word in all_tweet_tokens.keys():
+    
+    time_dict = all_tweet_tokens[word]["time"]
+    for tweet_time in time_dict.keys():
+        tweet_freq = time_dict[tweet_time]
+        pd_df = pd_df.append({"Word": word, "DateTime": tweet_time, "Freq": tweet_freq}, ignore_index=True)
+
+
+# mock more : the current data only does 2019/8/1/6 -- so here we are adding 7
+for word in all_tweet_tokens.keys():
+    time_dict = all_tweet_tokens[word]["time"]
+    for tweet_time in time_dict.keys():
+        tweet_freq = time_dict[tweet_time]
+        tweet_time = "2019/8/1/7"
+        pd_df = pd_df.append({"Word": word, "DateTime": tweet_time, "Freq": tweet_freq}, ignore_index=True)
+
+
+# messi is one that we kow
+
+# mock more : the current data only does 2019/8/1/6 -- so here we are adding 7
+for word in all_tweet_tokens.keys():
+    time_dict = all_tweet_tokens[word]["time"]
+    for tweet_time in time_dict.keys():
+        tweet_freq = time_dict[tweet_time]
+        tweet_time = "2019/8/1/8"
+        pd_df = pd_df.append({"Word": word, "DateTime": tweet_time, "Freq": tweet_freq}, ignore_index=True)
+
+
+
+
+# turn into spark_df
+# so pandas is not compatible
+
+spark_df = spark.createDataFrame(pd_df)
+
+# 
+
+
+
+
+
+
+
+
+# now to turn this into a dataframe
+# https://redislabs.com/blog/getting-started-redis-apache-spark-python/
+
