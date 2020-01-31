@@ -18,11 +18,7 @@ def check_correct_fields_exist(tweet):
 
 
 def get_tweet_time(tweet):
-
     timestamp = tweet[u"created_at"]
-    # parsing with fancy method
-    #now = parse(timestamp)
-    #current_tweet_time = str(now.year) + "/" + str(now.month) + "/" + str(now.day) + "/" + str(now.hour)
     return timestamp
 
 if __name__ == "__main__":
