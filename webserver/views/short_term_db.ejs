@@ -4,13 +4,16 @@
     <meta charset="utf-8">
     <title>Test</title>
     <link rel="stylesheet" type="text/css" href="/css/style.css">
-    <link href='https://fonts.googleapis.com/css?family=Montserrat:300' rel='stylesheet' type='text/css'>
+
   </head>
   <body>
+    <div class="container">
+    </div>
     <div>
       <head><!-- Include Plotly.js --><script src="https://cdn.plot.ly/plotly-latest.min.js"></script></head>
       <body>
          <div id="myDiv" style="width:800px;height:600px;">      <!-- Plotly chart will be drawn inside this DIV -->  </div>
+
         <script>
         var x_to_show = [<%- xval %>];
         var y_to_show = [<%- yval %>];
@@ -26,21 +29,23 @@
         var trace = { x: x_to_show,   y: y_to_show, mode: 'line', marker: {color: color_to_print,size: 12}    };
         var data = [ trace ];
         Plotly.newPlot('myDiv', data);
-      </script>
-      <fieldset>
+        </script>
+        <fieldset>
           <% if(howlong !== null){ %>
-              <h3> Frequency of term '<%=keyword %>' has <%=upordown %> by <%= ratio %>% in the past day</h3>
-              <p> Search with cache took <%= howlong %> ms</p>
+            <h3> Frequency of term '<%=keyword %>' has <%=upordown %> by <%= ratio %>% in the past week</h3>
+            <p> Search with Short-term DB took <%= howlong %> ms</p>
             <% } %>
             <% if(error !== null){ %>
               <p><%= error %></p>
-      <% } %>
-    </fieldset>
-      <fieldset>
-        <form action="/update_plot_short" method="">
-          <button class="btn default">More info...</button>
-        </form>
-      </fieldset>
+        <% } %>
+        </fieldset>
+
+        <fieldset>
+          <form action="/update_plot_all" method="">
+              <button class="btn default">Even more info...</button>
+          </form>
+        </fieldset>
+      </div>
 
     </body>
     </div>
