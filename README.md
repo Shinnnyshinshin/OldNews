@@ -26,3 +26,5 @@ Many of the concepts for HashTagOldNews were inspired by the methods used by Net
 Apache Spark is an open-source distributed general-purpose cluster-computing framework. Spark provides an interface for programming entire clusters with implicit data parallelism and fault tolerance.
 
 The Spark script used to do most of the processing is spark_submit_mongo.py in the ETL directory. The script speeds things up by extracting the Hashtags from the entities field of the original Twitter data rather than processing and tokenizing the tweet text itself.
+
+More to come...
