@@ -1,15 +1,21 @@
 import os
 import sys
+
+"""
+Function to loop through each file in file_list (which has been downloaded to S3) and untar them.
+"""
 def decomp_tar_files(file_list):
-    with open(file) as f:
+    with open(file_list) as f:
         for file in f:
             file = file.rstrip("\n")
             os.system("sudo mkdir /home/ubuntu/S3/BZ2/{}".format(file[:-4]))
             os.system("sudo tar -xvf /home/ubuntu/S3/{} -C /home/ubuntu/S3/BZ2/{}/".format(file,file[:-4]))
 
+"""
+Function to walk through the folder with all BZ2 Files and move them to a central "unzipped" folder. 
+"""
 def copy_bz2_to_central_folder(path_for_bz2):
-    count = 0
-    for dirpath, dirs, files in os.walk(my_path):
+    for dirpath, dirs, files in os.walk(path_for_bz2):
       for filename in files:
         fname = os.path.join(dirpath,filename)
         if fname.endswith('.bz2'):
@@ -18,4 +24,4 @@ def copy_bz2_to_central_folder(path_for_bz2):
 
 if __name__ == '__main__':
     decomp_tar_files(file_list = "file_list.txt")
-    copy_bz2_to_one_folder(my_path = '/home/ubuntu/S3Alias/')
+    copy_bz2_to_central_folder(path_for_bz2 = '/home/ubuntu/S3Alias/')
