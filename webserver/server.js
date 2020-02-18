@@ -13,7 +13,7 @@ app.use(express.static('public'))
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs')
 
-// connecting to the DBs (TODO : add repository as env?)
+// connecting to the DBs
 var mongodb = require('mongodb');
 var MongoClient = mongodb.MongoClient;
 var mongoUrl = params.monogoURL;
@@ -51,6 +51,7 @@ app.post('/', function(req, res) {
 	      }})}
        })
         });
+
 
 app.get('/update_plot_short', (req, res, next) => {
   var start = new Date();
@@ -99,9 +100,6 @@ app.get('/update_plot_short', (req, res, next) => {
            var howlong =  new Date() - start;
            res.render('short_term_db', {xval: returnvalues[0], yval: returnvalues[1], howlong: howlong, ratio:returnvalues[2], upordown:returnvalues[3],  keyword:current_keyword, error: null});
            return(res);
-          // so I need to get the result and build the function
-          //res.render('result', {xval: xval, yval: yval, error: null});
-          //res.json(result);
       });
     }); //end mongo client
    } catch (e) {
@@ -130,8 +128,6 @@ app.get('/update_plot_all', function(req, res) {
                 }
             })
         }})});
-
-
 
 app.listen(3000, function () {
   console.log('OldNews app listening on port 3000!')
