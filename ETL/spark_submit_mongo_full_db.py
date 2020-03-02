@@ -48,7 +48,7 @@ get_hash_tag = udf(lambda z: _get_hashtag(z))
 spark.udf.register("get_hash_tag", get_hash_tag)
 
 if __name__ == '__main__':
-    folder_data = sqlContext.read.json("/home/ubuntu/S3/JustOneDay")
+    folder_data = sqlContext.read.json("/home/ubuntu/S3/Unzipped")
     folder_data.registerTempTable("tweets")
 
     extracted_SQL_table = sqlContext.sql("SELECT distinct id, created_at, lang, entities.hashtags FROM tweets WHERE lang = 'en' AND size(entities.hashtags) > 0")

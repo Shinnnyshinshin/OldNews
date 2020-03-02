@@ -17,6 +17,23 @@ Many of the concepts for #OldNews were inspired by the methods used by Netflix a
 - [https://netflixtechblog.com/scaling-time-series-data-storage-part-i-ec2b6d44ba39](https://netflixtechblog.com/scaling-time-series-data-storage-part-i-ec2b6d44ba39)
 - [https://netflixtechblog.com/scaling-time-series-data-storage-part-ii-d67939655586](https://netflixtechblog.com/scaling-time-series-data-storage-part-ii-d67939655586)
 
+
+### Overview of Tech Stack
+![Overview](OldNewsOverview.png)
+
+As we see in the overview #OldNews begins with archived Twitter data being loaded from an S3 bucket. In this proof-of-concept, I used an archive dataset that is described in more detail below, but in a future iteration #OldNews could easily be integrated with Spark Stream to allow for real-time data processing. From the S3 bucket, the data is extracted and transformed and loaded into MongoDB and a Redis cache through Apache Spark.  The MongoDB and Redis cache are queried through a NodeDB frontend. The 2 databases are actually designed to be loaded and queried in 3 stages, which is described in more detail in the following diagram.
+
+![Overview](OldNews_DB_Detail.png)
+
+First, the largest database is the long-term MongoDB that stores all data for all hashtags going back in history. This database uses a highly efficient compression methods to scale well, allowing #OldNews to be effective and reponsive for years or even  decades worth of data. Since the database is stored on disk, this layer of #OldNews will horizonally scale well with partition tolerence and eventual consistency.
+
+Second, there is a second MongoDB that is designed to store short-term hashtag data for all hashtags that have occured in the past 7 days. This is essentially a 'cache' on disk for more recent data that will likely be queried more frequently (ie. What are trends that are popular now vs trends that used to be popular 5 years ago?).  The data is stored in an uncompressed format, allowing for faster queries, and horizontal scaling. 
+
+Third, there is a Redis cache that stores the past day's hashtags. This allows for very fast (< 5 ms) response time to queries. But since this is a cache in memory, Redis will not scale as well as MongoDB, although Amazon RDS allows for the spinning up of larger EC2 instances to scale vertically (for a price, of course).
+
+
+### A Deeper Dive
+
 ### The Dataset
 
 #OldNews in its current iteration uses 2 months of Twitter archive data from ([https://archive.org/details/twitterstream](https://archive.org/details/twitterstream)). The data is decompressed from the original bz2.tar format and consolidated using a python script called Decompress_And_Combine.py found in the ETL folder.
@@ -28,7 +45,7 @@ Apache Spark is an open-source distributed general-purpose cluster-computing fra
 The Spark script used to do most of the processing is spark_submit_mongo.py in the ETL directory. The script speeds things up by extracting the Hashtags from the entities field of the original Twitter data rather than processing and tokenizing the tweet text itself.
 
 
-#### Outline of Code
+#### Outline of Extraction and Processing of Twitter Data
 
 * First the JSON files are read into the Spark context using the read.json() command.
 * Only the fields that describe the hashtag (in a separate field from the tweet itself), the language of the tweet and the 'created_at' field are extracted from each tweet. At this point, each entry will look like this:
@@ -75,8 +92,30 @@ The Spark script used to do most of the processing is spark_submit_mongo.py in t
 |               radar | 2019-8-21 6: 00|
 ```
 
-* Finally we do a groupBy() command to count the tweets that occur in each hour-long time block. This is what will be added to the mongo database. 
+* Finally we do a groupBy() command to count the tweets that occur in each hour-long time block. This is what will be added to the mongo database and cache.
+
+### MongoDB
+
+MongoDB is a cross-platform document-oriented database that is classefied as a NoSQL. MongoDB uses JSON-like documents with schema.
+
+For #OldNews, MongoDB was chosen over SQL databases for a few reasons.  The first reason had to do with the fact that I wanted each hashtag to be an entry, and for the entry to be updated as more data was streamed in. In an SQL database this would require the entire entry to be loaded and updated with each new occurance of the hashtag, or even worse, require columns to be added to the database with each new occurance. Using a NoSQL database like MongoDB simplified this entire process, since documents could be 'upserted' (update-insert), and an entry could have an indefinite number of entries.
+
+In addition, MongoDB allows for the compression of the DB using zlib (similar to gzip), which offer excellent compression, but more resource intensive than the default Snappy method.
+
+For #OldNews, I created two MongoDBs (collections) using the following commands. One with zlib compression and one with no compression:
+
+```
+    db.createCollection( "tweets_final_zlib", {storageEngine:{wiredTiger:{configString:'block_compressor=zlib'}}} );
+    db.createCollection( "tweets_final_uncompressed", {storageEngine:{wiredTiger:{configString:'block_compressor=none'}}} );
+```
+
+Using this 2-tiered database architeture allowed for a < 20 ms response for the uncompressed database that did not require a decompression step after each query. For the full compressed db, queries were still a zippy < 100 ms, even with the decompression step with zlib.
+
+For more information about MongoDBs compression features, here is a great article. 
+
+[https://www.mongodb.com/blog/post/new-compression-options-mongodb-30](Compression Options for MongoDB)
 
 
-## Mongo Databases
+### Redis
 
+Redis, which stands for Remote Dictionary Server, is a fast, open-source, in-memory key-value data store for use as a database, cache, message broker, and queue. Using Redis with #OldNews allowed for very fast < 5ms response time for queries of recent data.  Redis was integrated into #OldNews using Amazon RDS, so there was no separate set-up of an EC2 instance. 
