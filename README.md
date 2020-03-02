@@ -27,6 +27,7 @@ Apache Spark is an open-source distributed general-purpose cluster-computing fra
 
 The Spark script used to do most of the processing is spark_submit_mongo.py in the ETL directory. The script speeds things up by extracting the Hashtags from the entities field of the original Twitter data rather than processing and tokenizing the tweet text itself.
 
+<<<<<<< HEAD
 
 #### Outline of Code
 
@@ -76,3 +77,6 @@ The Spark script used to do most of the processing is spark_submit_mongo.py in t
 ```
 
 * Finally we do a groupBy() command to count the tweets that occur in each hour-long time block. This is what will be added to the mongo database. 
+=======
+More to come...
+>>>>>>> fd8735ff529522683516f1eda42d6b79e58e2fab
