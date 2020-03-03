@@ -48,8 +48,23 @@ def _get_hashtag(entities):
 get_hash_tag = udf(lambda z: _get_hashtag(z))
 spark.udf.register("get_hash_tag", get_hash_tag)
 
+def transform_Data(extracted_sql_table):
+    HashTagsTable = extracted_sql_table.select("created_at", explode( "hashtags"))
+    HashTagsTable_WithDates = HashTagsTable.withColumn('Keyword', get_hash_tag('col')).withColumn('Time', tweet_time('created_at') )
+    # clean up table
+    columns_to_drop = ['created_at', 'col']
+    hashtags_table = HashTagsTable_WithDates.drop(*columns_to_drop)
+    before_aggregation = hashtags_table.groupBy('Keyword', 'Time').count() 
+    after_aggregation = (before_aggregation.groupBy("Keyword").agg(collect_list(struct("Time", "count")).alias('occurances')))
+    return(after_aggregation)
+
+
 if __name__ == '__main__':
-    folder_data = sqlContext.read.json("/home/ubuntu/S3/OneDay")
+
+    with open('test_hashtagoldnews_config.json', 'r') as config_file:
+        config_dict = json.load(config_file)
+
+    folder_data = sqlContext.read.json(config_dict['S3_root'] + "/OneDay")
     folder_data.registerTempTable("tweets")
 
     extracted_SQL_table = sqlContext.sql("SELECT distinct id, created_at, lang, entities.hashtags FROM tweets WHERE lang = 'en' AND size(entities.hashtags) > 0")
@@ -69,8 +84,8 @@ if __name__ == '__main__':
     groupby_result = (to_mongo.groupBy("Keyword").agg(collect_list(struct("Time", "count")).alias('occurances')))
 
     # loading to REDIS
-    redis_host = "redis-clust.wdeoii.ng.0001.usw2.cache.amazonaws.com"
-    redis_port = 6379
+    redis_host = config_dict['redis_path']
+    redis_port = config_dict[r]
     redis_password = ""
     r = redis.StrictRedis(host=redis_host, port=redis_port, decode_responses=True)
 
