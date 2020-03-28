@@ -113,8 +113,7 @@ Using this 2-tiered database architeture allowed for a < 20 ms response for the 
 
 For more information about MongoDBs compression features, here is a great article. 
 
-(https://www.mongodb.com/blog/post/new-compression-options-mongodb-30)[Compression Options for MongoDB]
-
+[Compression Options for MongoDB](https://www.mongodb.com/blog/post/new-compression-options-mongodb-30)
 
 ### Redis
 
